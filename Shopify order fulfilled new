@@ -1,0 +1,428 @@
+{% if fulfillment.item_count == item_count %}
+  {% capture email_title %}Your order is on the way{% endcapture %}
+  {% capture email_body %}Your order is on the way. Track your shipment, view your order details, or reorder these items anytime.{% endcapture %}
+{% elsif fulfillment.item_count > 1 %}
+  {% if fulfillment_status == 'fulfilled' %}
+    {% capture email_title %}The last items in your order are on the way{% endcapture %}
+    {% capture email_body %}The last items in your order are on the way. Track your shipment, view your order details, or reorder these items anytime.{% endcapture %}
+  {% else %}
+    {% capture email_title %}Some items in your order are on the way{% endcapture %}
+    {% capture email_body %}Some items in your order are on the way. Track your shipment, view your order details, or reorder these items anytime.{% endcapture %}
+  {% endif %}
+{% else %}
+  {% if fulfillment_status == 'fulfilled' %}
+    {% capture email_title %}The last item in your order is on the way{% endcapture %}
+    {% capture email_body %}The last item in your order is on the way. Track your shipment, view your order details, or reorder these items anytime.{% endcapture %}
+  {% else %}
+    {% capture email_title %}One item in your order is on the way{% endcapture %}
+    {% capture email_body %}One item in your order is on the way. Track your shipment, view your order details, or reorder these items anytime.{% endcapture %}
+  {% endif %}
+{% endif %}
+
+{% capture reorder_link %}{{ shop.url }}/cart/{% endcapture %}
+{% assign reorder_count = 0 %}
+{% for line in fulfillment.fulfillment_line_items %}
+  {% unless line.line_item.nested_line_child? %}
+    {% if line.line_item.variant.id %}
+      {% if reorder_count > 0 %}{% capture reorder_link %}{{ reorder_link }},{% endcapture %}{% endif %}
+      {% capture reorder_link %}{{ reorder_link }}{{ line.line_item.variant.id }}:{{ line.quantity }}{% endcapture %}
+      {% assign reorder_count = reorder_count | plus: 1 %}
+    {% endif %}
+  {% endunless %}
+{% endfor %}
+{% if reorder_count == 0 %}
+  {% capture reorder_link %}{{ shop.url }}{% endcapture %}
+{% endif %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ email_title }}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      body, table, td, p, a {
+        font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f5f3f0;
+        color: #313541;
+      }
+      .wrapper {
+        width: 100%;
+        background-color: #f5f3f0;
+        padding: 24px 12px;
+      }
+      .container {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #e8e1db;
+        border-radius: 14px;
+      }
+      .section-pad {
+        padding-left: 32px;
+        padding-right: 32px;
+      }
+      .eyebrow {
+        margin: 8px 0 0 0;
+        font-size: 12px;
+        color: #7b716f;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+      .title {
+        margin: 0;
+        font-size: 31px;
+        line-height: 1.2;
+        color: #313541;
+        font-weight: 700;
+      }
+      .body-copy {
+        margin: 12px 0 0 0;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #5c5150;
+      }
+      .info-card {
+        background-color: #faf8f6;
+        border: 1px solid #ebe4dd;
+        border-radius: 12px;
+      }
+      .button {
+        border-radius: 8px;
+      }
+      .button a {
+        display: block;
+        padding: 13px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        text-align: center;
+      }
+      .button-primary {
+        background-color: #fc621f;
+      }
+      .button-primary a {
+        color: #ffffff;
+      }
+      .button-dark {
+        background-color: #313541;
+      }
+      .button-dark a {
+        color: #ffffff;
+      }
+      .button-light {
+        background-color: #fff7f3;
+        border: 1px solid #ffd5c2;
+      }
+      .button-light a {
+        color: #fc621f;
+      }
+      .muted-link,
+      .muted-link a {
+        color: #7b716f;
+      }
+      .divider {
+        height: 1px;
+        background-color: #ebe4dd;
+      }
+      .item-image {
+        width: 64px;
+        height: 64px;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #f4f1ee;
+      }
+      .item-image img {
+        display: block;
+        width: 64px;
+        height: 64px;
+      }
+      .item-title {
+        font-size: 15px;
+        line-height: 1.4;
+        color: #313541;
+        font-weight: 700;
+      }
+      .item-meta {
+        font-size: 13px;
+        line-height: 1.5;
+        color: #6f6463;
+      }
+      .footer-copy {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #6f6463;
+      }
+      @media screen and (max-width: 640px) {
+        .section-pad {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+        .stack,
+        .stack tbody,
+        .stack tr,
+        .stack td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .mobile-gap {
+          height: 12px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <table role="presentation" class="wrapper" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td>
+          <table role="presentation" class="container" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td class="section-pad" style="padding-top: 30px; padding-bottom: 14px; text-align: center;">
+                {% if shop.email_logo_url %}
+                  <img src="{{ shop.email_logo_url }}" alt="{{ shop.name }}" width="{{ shop.email_logo_width }}">
+                {% else %}
+                  <h1 style="margin: 0; font-size: 26px; color: #313541; font-weight: 700;">{{ shop.name }}</h1>
+                {% endif %}
+                <p class="eyebrow">Shipping Update</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="section-pad" style="padding-top: 4px; padding-bottom: 24px; text-align: center;">
+                <p style="margin: 0; font-size: 16px; color: #313541;">
+                  Hi
+                  <strong>
+                    {% if customer and customer.first_name %}
+                      {{ customer.first_name }}
+                    {% elsif shipping_address and shipping_address.first_name %}
+                      {{ shipping_address.first_name }}
+                    {% else %}
+                      there
+                    {% endif %}
+                  </strong>,
+                </p>
+                <h2 class="title" style="padding-top: 10px;">{{ email_title }}</h2>
+                <p class="body-copy">{{ email_body }}</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="section-pad" style="padding-bottom: 24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="info-card">
+                  <tr>
+                    <td style="padding: 24px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="stack">
+                        <tr>
+                          <td style="vertical-align: top;">
+                            <p style="margin: 12px 0 0 0; font-size: 18px; font-weight: 700; color: #313541;">Shipping</p>
+                            <p style="margin: 6px 0 0 0; font-size: 14px; line-height: 1.6; color: #6f6463;">
+                              Your order has been packaged and is on its way to you.
+                              {% if fulfillment.estimated_delivery_at %}
+                                Estimated delivery: <strong style="color: #313541;">{{ fulfillment.estimated_delivery_at | date: format: 'date' }}</strong>.
+                              {% endif %}
+                            </p>
+                          </td>
+                          <td class="mobile-gap" style="width: 12px;"></td>
+                          <td style="vertical-align: top; text-align: right; white-space: nowrap;">
+                            <p style="margin: 0; font-size: 12px; color: #7b716f; text-transform: uppercase; letter-spacing: 1px;">Order</p>
+                            <p style="margin: 6px 0 0 0; font-size: 20px; font-weight: 700; color: #313541;">{{ order_name }}</p>
+                            {% if po_number %}
+                              <p style="margin: 6px 0 0 0; font-size: 12px; color: #7b716f;">PO #{{ po_number }}</p>
+                            {% endif %}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="section-pad" style="padding-bottom: 24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td>
+                      {% if order_status_url %}
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td class="button button-primary"><a href="{{ order_status_url }}">View your order</a></td>
+                          </tr>
+                        </table>
+                        <div style="height: 12px; line-height: 12px; font-size: 12px;">&nbsp;</div>
+                      {% endif %}
+
+                      {% if shop_app_tracking_url %}
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td class="button button-dark"><a href="{{ shop_app_tracking_url }}">Track with Shop</a></td>
+                          </tr>
+                        </table>
+                        <div style="height: 12px; line-height: 12px; font-size: 12px;">&nbsp;</div>
+                      {% elsif fulfillment.tracking_url %}
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td class="button button-dark"><a href="{{ fulfillment.tracking_url }}">Track shipment</a></td>
+                          </tr>
+                        </table>
+                        <div style="height: 12px; line-height: 12px; font-size: 12px;">&nbsp;</div>
+                      {% endif %}
+
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td class="button button-light"><a href="{{ reorder_link }}">Reorder these items</a></td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
+                  <tr>
+                    <td class="muted-link" style="font-size: 13px; text-align: center;">
+                      or <a href="{{ shop.url }}" style="color: #313541; font-weight: 700; text-decoration: none;">visit our store</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            {% if fulfillment.tracking_numbers.size > 0 %}
+              <tr>
+                <td class="section-pad" style="padding-bottom: 24px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="info-card">
+                    <tr>
+                      <td style="padding: 18px 20px;">
+                        <p style="margin: 0 0 8px 0; font-size: 12px; color: #7b716f; text-transform: uppercase; letter-spacing: 1px;">Tracking details</p>
+                        <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #5c5150;">
+                          {% if fulfillment.tracking_numbers.size == 1 and fulfillment.tracking_company and fulfillment.tracking_url %}
+                            {{ fulfillment.tracking_company }} tracking number:
+                            <a href="{{ fulfillment.tracking_url }}" style="color: #fc621f; font-weight: 700;">{{ fulfillment.tracking_numbers.first }}</a>
+                          {% elsif fulfillment.tracking_numbers.size == 1 %}
+                            Tracking number: <strong>{{ fulfillment.tracking_numbers.first }}</strong>
+                          {% else %}
+                            {% if fulfillment.tracking_company %}{{ fulfillment.tracking_company }} {% endif %}tracking numbers:<br>
+                            {% for tracking_number in fulfillment.tracking_numbers %}
+                              {% if fulfillment.tracking_urls[forloop.index0] %}
+                                <a href="{{ fulfillment.tracking_urls[forloop.index0] }}" style="color: #fc621f; font-weight: 700;">{{ tracking_number }}</a>
+                              {% else %}
+                                <strong>{{ tracking_number }}</strong>
+                              {% endif %}
+                              {% unless forloop.last %}<br>{% endunless %}
+                            {% endfor %}
+                          {% endif %}
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            {% endif %}
+
+            <tr>
+              <td class="section-pad" style="padding-bottom: 18px;">
+                <div class="divider"></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="section-pad" style="padding-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 20px; color: #313541; font-weight: 700;">Items in this shipment</h3>
+              </td>
+            </tr>
+
+            {% for line in fulfillment.fulfillment_line_items %}
+              {% unless line.line_item.nested_line_child? %}
+                {% if line.line_item.presentment_title %}
+                  {% assign line_title = line.line_item.presentment_title %}
+                {% elsif line.line_item.title %}
+                  {% assign line_title = line.line_item.title %}
+                {% else %}
+                  {% assign line_title = line.line_item.product.title %}
+                {% endif %}
+
+                {% if line.quantity < line.line_item.quantity %}
+                  {% capture line_display %}{{ line.quantity }} of {{ line.line_item.quantity }}{% endcapture %}
+                {% else %}
+                  {% assign line_display = line.line_item.quantity %}
+                {% endif %}
+
+                <tr>
+                  <td class="section-pad" style="padding-top: 14px; padding-bottom: 14px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="vertical-align: top; width: 78px;">
+                          <div class="item-image">
+                            {% if line.line_item.image %}
+                              <img src="{{ line.line_item | img_url: 'compact_cropped' }}" alt="{{ line_title }}">
+                            {% else %}
+                              <img src="{{ 'notifications/no-image.png' | shopify_asset_url }}" alt="{{ line_title }}">
+                            {% endif %}
+                          </div>
+                        </td>
+                        <td style="vertical-align: top; padding-left: 14px;">
+                          <p class="item-title" style="margin: 0;">{{ line_title }}&nbsp;&times;&nbsp;{{ line_display }}</p>
+
+                          {% if line.line_item.variant.title != 'Default Title' %}
+                            <p class="item-meta" style="margin: 4px 0 0 0;">{{ line.line_item.variant.title }}</p>
+                          {% endif %}
+
+                          {% for group in line.line_item.groups %}
+                            {% if group.deliverable? %}
+                              <p class="item-meta" style="margin: 4px 0 0 0;">For: {{ group.display_title }}</p>
+                            {% else %}
+                              <p class="item-meta" style="margin: 4px 0 0 0;">Part of: {{ group.display_title }}</p>
+                            {% endif %}
+                          {% endfor %}
+
+                          {% if line.line_item.selling_plan_allocation %}
+                            <p class="item-meta" style="margin: 4px 0 0 0;">{{ line.line_item.selling_plan_allocation.selling_plan.name }}</p>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                {% if forloop.last == false %}
+                  <tr>
+                    <td class="section-pad"><div class="divider"></div></td>
+                  </tr>
+                {% endif %}
+              {% endunless %}
+            {% endfor %}
+
+            <tr>
+              <td class="section-pad" style="padding-top: 24px; padding-bottom: 0;">
+                <div class="divider"></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="section-pad" style="padding-top: 22px; padding-bottom: 28px; text-align: center;">
+                <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: #313541;">Need more for your next run?</p>
+                <p class="footer-copy" style="margin-bottom: 16px;">You can reorder the same shipped items in one click, or browse the full Rollrunner collection anytime.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 16px auto;">
+                  <tr>
+                    <td class="button button-light"><a href="{{ reorder_link }}">Reorder now</a></td>
+                  </tr>
+                </table>
+                <p class="footer-copy">Questions about your order? Reply to this email or contact us at <a href="mailto:{{ shop.email }}" style="color: #fc621f; font-weight: 700;">{{ shop.email }}</a>.</p>
+                <p style="margin: 18px 0 0 0; font-size: 11px; color: #7b716f;">&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. All rights reserved.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
